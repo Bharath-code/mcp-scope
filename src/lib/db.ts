@@ -8,7 +8,9 @@ export function getReportBySlug(db: D1Database, slug: string): Promise<ReportRow
   return db.prepare("SELECT * FROM reports WHERE slug = ?").bind(slug).first<ReportRow>();
 }
 
-// Find a completed report with the same tools/list hash (cache dedupe).
+// Find the canonical completed report for a tools/list hash (cache dedupe).
+// canonical_id IS NULL excludes prior aliases, so pointers never chain — one
+// canonical per tools_hash. Earliest wins (created_at ASC).
 export function getCanonicalByToolsHash(
   db: D1Database,
   toolsHash: string,
@@ -16,7 +18,7 @@ export function getCanonicalByToolsHash(
 ): Promise<ReportRow | null> {
   return db
     .prepare(
-      "SELECT * FROM reports WHERE tools_hash = ? AND status = 'complete' AND id != ? ORDER BY created_at ASC LIMIT 1",
+      "SELECT * FROM reports WHERE tools_hash = ? AND status = 'complete' AND canonical_id IS NULL AND id != ? ORDER BY created_at ASC LIMIT 1",
     )
     .bind(toolsHash, excludeId)
     .first<ReportRow>();
@@ -37,6 +39,7 @@ export async function updateReportStatus(
 // Generic patch of a report row with a whitelisted set of columns.
 const PATCHABLE = new Set([
   "tools_hash",
+  "canonical_id",
   "server_name",
   "status",
   "error",

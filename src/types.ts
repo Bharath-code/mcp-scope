@@ -67,6 +67,7 @@ export type ReportApiResponse = {
 export type ReportRow = {
   id: string;
   tools_hash: string | null;
+  canonical_id: string | null; // alias -> canonical report id when a dedupe cache hit
   server_url: string;
   server_name: string | null;
   status: ReportStatus;

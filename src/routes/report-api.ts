@@ -64,8 +64,13 @@ export async function buildReportResponse(
 
 reportApi.get("/api/report/:hash", async (c) => {
   const id = c.req.param("hash");
-  const report = await getReport(c.env.DB, id);
+  let report = await getReport(c.env.DB, id);
   if (!report) return c.json({ error: "Report not found" }, 404);
+  // Cache-dedupe alias: serve the canonical report's data (TASK-013).
+  if (report.canonical_id) {
+    const canonical = await getReport(c.env.DB, report.canonical_id);
+    if (canonical) report = canonical;
+  }
   const unlocked = isUnlocked(c.req.header("cookie"), id);
   return c.json(await buildReportResponse(c.env.DB, report, unlocked));
 });

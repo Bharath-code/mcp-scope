@@ -4,6 +4,7 @@
 CREATE TABLE IF NOT EXISTS reports (
   id TEXT PRIMARY KEY,                -- provisional run id: sha256(normalized_url + timestamp)
   tools_hash TEXT,                    -- sha256 of raw tools/list JSON (cache key), NULL until listed
+  canonical_id TEXT REFERENCES reports(id), -- alias pointer: dedupe hit -> earlier complete report w/ same tools_hash
   server_url TEXT NOT NULL,           -- normalized input URL
   server_name TEXT,                   -- from MCP initialize serverInfo.name
   status TEXT NOT NULL DEFAULT 'queued'

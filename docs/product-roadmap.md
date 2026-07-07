@@ -93,7 +93,7 @@
   Files: `src/pipeline/audit-pipeline.ts`, `src/pipeline/ingest.ts`
   Notes: Replace stub connecting/listing stages. Map failures to the exact copy in PRD § Edge Cases > Ingestion (unreachable, non-MCP endpoint, 401/403 → bearer-token hint, >1MB, malformed JSON with escaped excerpt). Failed runs refund the rate-limit count. Compute `tools_hash` = sha256(rawJson), store on the report, set `tool_count` and `server_name`. Verify: a bogus URL, a non-MCP URL, and a real server each show their specific stage outcome on the report page.
 
-- [ ] **TASK-013** — Hash-based cache dedupe
+- [x] **TASK-013** — Hash-based cache dedupe
   Files: `src/routes/audit.ts`, `src/pipeline/audit-pipeline.ts`, `src/lib/db.ts`
   Notes: Per FR-003 + Open Question Q1(b): after tools/list, look up an existing complete report with the same `tools_hash`; if found, mark this run complete as an alias (copy headline refs or 302 the report page to the canonical id — implementer's choice, keep one canonical id per tools_hash) and refund the rate-limit charge. Verify: second submission of an unchanged server returns instantly with zero pipeline stages beyond listing.
 

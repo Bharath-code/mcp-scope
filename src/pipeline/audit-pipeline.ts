@@ -1,5 +1,5 @@
 import { DurableObject } from "cloudflare:workers";
-import { getReport, patchReport, updateReportStatus } from "../lib/db";
+import { getCanonicalByToolsHash, getReport, patchReport, updateReportStatus } from "../lib/db";
 import { refundFreshRun } from "../lib/rate-limit";
 import { sha256Hex } from "../lib/hash";
 import { ingest, classifyIngestError } from "./ingest";
@@ -57,11 +57,28 @@ export class AuditPipeline extends DurableObject<Bindings> {
       }
 
       if (!(await this.advance(reportId, "listing"))) return;
+      const toolsHash = await sha256Hex(result.rawJson);
       await patchReport(db, reportId, {
-        tools_hash: await sha256Hex(result.rawJson), // TASK-013 dedupes on this
+        tools_hash: toolsHash,
         server_name: result.serverName,
         tool_count: result.tools.length,
       });
+
+      // TASK-013 cache dedupe: an unchanged server hashes identically to an
+      // earlier complete report — alias to it, refund the charge, skip eval.
+      const canonical = await getCanonicalByToolsHash(db, toolsHash, reportId);
+      if (canonical) {
+        await patchReport(db, reportId, {
+          canonical_id: canonical.id,
+          status: "complete",
+          completed_at: new Date().toISOString(),
+        });
+        if (meta.clientIp && meta.chargeDay) {
+          await refundFreshRun(db, meta.clientIp, meta.chargeDay);
+        }
+        await this.ctx.storage.deleteAlarm();
+        return;
+      }
 
       const stageDelay = Number(this.env.STAGE_DELAY_MS ?? "1000");
       for (const stage of STUB_STAGES) {
