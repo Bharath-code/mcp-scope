@@ -85,7 +85,7 @@
 **Phase prompt — give this to your coding agent:**
 > "Read docs/product-roadmap.md and find Phase 1. Then read only the Reference sections listed above from docs/prd.md, docs/product-vision.md, and docs/design.md. Continue from the first unchecked task. After each task, mark it complete in the roadmap. When all tasks are done, create a branch `phase-1/ingest-and-static-pass`, commit, push, and open a PR for review."
 
-- [ ] **TASK-011** — MCP client connector: streamable HTTP with SSE fallback
+- [x] **TASK-011** — MCP client connector: streamable HTTP with SSE fallback
   Files: `src/pipeline/ingest.ts`, `package.json`
   Notes: `npm i @modelcontextprotocol/sdk`. Connect with 15s timeout: StreamableHTTPClientTransport first, SSEClientTransport on failure. Optional bearer token via Authorization header — held in memory only, never written to D1 or logs. Call `initialize` + `tools/list` ONLY; do not import or wrap `tools/call` (Build Philosophy #7). Cap tools/list response at 1 MB. Return `{ serverName, tools, rawJson }`. Verify: connects to a public reference MCP server over both transports (e.g. a Cloudflare-hosted demo server for streamable HTTP).
 

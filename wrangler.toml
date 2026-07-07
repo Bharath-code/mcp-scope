@@ -22,3 +22,9 @@ new_sqlite_classes = ["AuditPipeline"]
 binding = "DB"
 database_name = "mcp-audit"
 database_id = "placeholder-set-after-d1-create"
+
+# Custom domain (TASK-010). Register mcpaudit.dev, add the zone to this Cloudflare
+# account, then uncomment. .com redirects to .dev at the registrar/dashboard level.
+# [[routes]]
+# pattern = "mcpaudit.dev"
+# custom_domain = true
