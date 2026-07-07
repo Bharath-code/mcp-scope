@@ -1,0 +1,24 @@
+name = "mcp-audit"
+main = "src/index.tsx"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PUBLIC_POSTHOG_KEY = ""
+FOUNDER_EMAIL = ""
+# STAGE_DELAY_MS / ALARM_TIMEOUT_MS are dev-only: pass via `--var` to wrangler dev.
+# They also gate the /dev/* helper routes, so they MUST stay out of production vars.
+
+[[durable_objects.bindings]]
+name = "AUDIT_PIPELINE"
+class_name = "AuditPipeline"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AuditPipeline"]
+
+# Run `wrangler d1 create mcp-audit` after logging in and paste the returned database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "mcp-audit"
+database_id = "placeholder-set-after-d1-create"

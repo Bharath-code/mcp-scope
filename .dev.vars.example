@@ -1,0 +1,9 @@
+# Copy to .dev.vars for local dev. In production set each via `wrangler secret put NAME`.
+# PUBLIC_POSTHOG_KEY and FOUNDER_EMAIL live in wrangler.toml [vars] (non-secret).
+
+ANTHROPIC_API_KEY=      # Haiku eval + query generation + token counting
+POLAR_ACCESS_TOKEN=     # checkout session creation
+POLAR_WEBHOOK_SECRET=   # webhook signature verification
+POLAR_TUNE_UP_PRODUCT_ID= # $149 tune-up product id
+RESEND_API_KEY=         # transcript + notification email
+SENTRY_DSN=             # error tracking
