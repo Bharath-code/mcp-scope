@@ -34,15 +34,59 @@ export function assertUnderCap(rawJson: string): void {
   }
 }
 
+// User-facing ingest failure copy (PRD § Edge Cases > Ingestion). Returned raw —
+// the report page escapes error text on both server render and client poll.
+export const INGEST_ERRORS = {
+  unreachable: "Couldn't reach your server — check the URL and that it's publicly accessible.",
+  notMcp:
+    "Connected, but this doesn't look like an MCP endpoint — check that the URL supports streamable HTTP or SSE.",
+  auth: "Your server wants authentication — add a bearer token below and re-run.",
+  tooBig: "Your tools/list response exceeds 1 MB — that's its own finding. Contact us.",
+} as const;
+
+// Map a thrown ingest error to its user-facing copy. The SDK surfaces HTTP
+// status as a numeric `.code`; network/DNS failures throw TypeError or a
+// message we pattern-match. Anything connectable-but-unrecognized falls through
+// to the non-MCP message.
+// ponytail: message-pattern classification, not exhaustive. Tighten if a real
+// server trips the wrong bucket.
+export function classifyIngestError(err: unknown): string {
+  const code = (err as { code?: unknown })?.code;
+  if (code === 401 || code === 403) return INGEST_ERRORS.auth;
+
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/1 MB limit/.test(msg)) return INGEST_ERRORS.tooBig;
+  if (/invalid JSON|Unexpected token|not valid JSON|in JSON at position/i.test(msg)) {
+    // ponytail: excerpt = the parser's own message; plumbing raw response bytes
+    // out of the SDK isn't worth it. Renderer escapes this.
+    return `Your server returned invalid JSON from tools/list: ${msg.slice(0, 200)}`;
+  }
+
+  // A positive numeric code = a real HTTP status, so we reached the server —
+  // it's just not MCP-shaped. Only classify as unreachable when there's no HTTP
+  // status and the error looks network-level. On the CF edge a DNS/connection
+  // failure surfaces as a bare `Error: internal error; reference = ...`.
+  const httpStatus = typeof code === "number" && code > 0;
+  const networkish =
+    err instanceof TypeError ||
+    /fetch failed|network|ENOTFOUND|ECONNREFUSED|getaddrinfo|could not connect|connection (refused|reset|closed|lost)|timed out|timeout|\bdns\b|internal error|reference =/i.test(
+      msg,
+    );
+  if (!httpStatus && networkish) return INGEST_ERRORS.unreachable;
+  return INGEST_ERRORS.notMcp;
+}
+
 export async function ingest(
   serverUrl: string,
   bearerToken?: string,
 ): Promise<IngestResult> {
   const url = new URL(serverUrl);
-  // `redirect: "error"` blocks SSRF-via-redirect: assertSafeUrl (at the route)
-  // vets the initial URL, but fetch would otherwise follow a 302 to a private
+  // `redirect: "manual"` blocks SSRF-via-redirect: assertSafeUrl (at the route)
+  // vets the initial URL; with "manual" a 3xx is returned unfollowed, so the SDK
+  // sees a non-ok status and throws instead of chasing a redirect to a private
   // address (e.g. cloud metadata). MCP endpoints are exact — no legit redirect.
-  const requestInit: RequestInit = { redirect: "error", ...authRequestInit(bearerToken) };
+  // ("error" is not implementable at the CF edge — it throws a TypeError.)
+  const requestInit: RequestInit = { redirect: "manual", ...authRequestInit(bearerToken) };
 
   // Streamable HTTP first (current spec), SSE only if the transport won't
   // connect (older servers). Once connected, any error is terminal — we do not
@@ -52,6 +96,9 @@ export async function ingest(
     () => new SSEClientTransport(url, { requestInit }),
   ];
 
+  // Streamable is the primary transport; its connect error is the most
+  // informative one to surface. Keep the first (streamable) failure and throw
+  // that if every transport fails — the SSE fallback's errors are vague.
   let connectErr: unknown;
   for (const makeTransport of factories) {
     const client = new Client(
@@ -61,7 +108,7 @@ export async function ingest(
     try {
       await client.connect(makeTransport(), { timeout: CONNECT_TIMEOUT_MS });
     } catch (err) {
-      connectErr = err;
+      if (connectErr === undefined) connectErr = err;
       await client.close().catch(() => {});
       continue; // transport failed to connect — try the next one
     }

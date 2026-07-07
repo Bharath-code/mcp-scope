@@ -89,7 +89,7 @@
   Files: `src/pipeline/ingest.ts`, `package.json`
   Notes: `npm i @modelcontextprotocol/sdk`. Connect with 15s timeout: StreamableHTTPClientTransport first, SSEClientTransport on failure. Optional bearer token via Authorization header — held in memory only, never written to D1 or logs. Call `initialize` + `tools/list` ONLY; do not import or wrap `tools/call` (Build Philosophy #7). Cap tools/list response at 1 MB. Return `{ serverName, tools, rawJson }`. Verify: connects to a public reference MCP server over both transports (e.g. a Cloudflare-hosted demo server for streamable HTTP).
 
-- [ ] **TASK-012** — Wire ingest into the pipeline with per-stage error copy
+- [x] **TASK-012** — Wire ingest into the pipeline with per-stage error copy
   Files: `src/pipeline/audit-pipeline.ts`, `src/pipeline/ingest.ts`
   Notes: Replace stub connecting/listing stages. Map failures to the exact copy in PRD § Edge Cases > Ingestion (unreachable, non-MCP endpoint, 401/403 → bearer-token hint, >1MB, malformed JSON with escaped excerpt). Failed runs refund the rate-limit count. Compute `tools_hash` = sha256(rawJson), store on the report, set `tool_count` and `server_name`. Verify: a bogus URL, a non-MCP URL, and a real server each show their specific stage outcome on the report page.
 

@@ -1,17 +1,14 @@
 import { DurableObject } from "cloudflare:workers";
 import { getReport, patchReport, updateReportStatus } from "../lib/db";
 import { refundFreshRun } from "../lib/rate-limit";
+import { sha256Hex } from "../lib/hash";
+import { ingest, classifyIngestError } from "./ingest";
 import { TERMINAL_STATUSES, type ReportStatus } from "../types";
 import type { Bindings } from "../index";
 
-// ponytail: stub pipeline for Phase 0 — real stages land in Phase 1/2.
-const STUB_STAGES: ReportStatus[] = [
-  "connecting",
-  "listing",
-  "static",
-  "generating",
-  "evaluating",
-];
+// ponytail: static/generating/evaluating still stubbed — real stages land in
+// Phase 1/2 (TASK-015+). connecting/listing are now the real ingest (TASK-012).
+const STUB_STAGES: ReportStatus[] = ["static", "generating", "evaluating"];
 
 const DEFAULT_ALARM_MS = 5 * 60 * 1000; // FR-017 watchdog: 5 minutes
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -49,6 +46,23 @@ export class AuditPipeline extends DurableObject<Bindings> {
     await this.ctx.storage.setAlarm(Date.now() + this.alarmMs());
 
     try {
+      // connecting + listing: real MCP ingest. classifyIngestError maps any
+      // failure to its PRD copy so the report shows the specific outcome.
+      if (!(await this.advance(reportId, "connecting"))) return;
+      let result;
+      try {
+        result = await ingest(input.serverUrl, input.bearerToken);
+      } catch (err) {
+        throw new Error(classifyIngestError(err));
+      }
+
+      if (!(await this.advance(reportId, "listing"))) return;
+      await patchReport(db, reportId, {
+        tools_hash: await sha256Hex(result.rawJson), // TASK-013 dedupes on this
+        server_name: result.serverName,
+        tool_count: result.tools.length,
+      });
+
       const stageDelay = Number(this.env.STAGE_DELAY_MS ?? "1000");
       for (const stage of STUB_STAGES) {
         // Watchdog wins: if the run was already marked terminal, stop advancing.
