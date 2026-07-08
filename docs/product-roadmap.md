@@ -109,7 +109,7 @@
   Files: `src/pages/Report.tsx`, `src/pages/components.tsx`
   Notes: Stage log line "static checks ✓" plus finding cards: context tax ("Your N tool definitions consume X tokens of every conversation before the user says a word"), schema issues (named), weak descriptions (named), name-collision warnings (named pairs). Copy follows Vision § Voice & Tone DO column exactly — numbers-first, no hedging. Style with docs/design.md tokens if present. Verify: real server renders all applicable finding types; a clean server renders "static checks ✓ — no issues".
 
-- [ ] **TASK-017** — Landing page with the submission form
+- [x] **TASK-017** — Landing page with the submission form
   Files: `src/pages/Home.tsx`, `src/index.tsx`
   Notes: Per PRD § UI/UX > Screen: Landing. Headline "Which of your tools does Claude actually use?", subhead, single input + submit, "Private server?" toggle revealing the bearer-token field with the "used in-flight only, never stored" note. Inline error rendering for 400/429 responses. Published-reports section stubbed as empty (fills in Phase 4). Verify: full submit flow from landing to live report works in production.
 

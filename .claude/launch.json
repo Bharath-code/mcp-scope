@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "wrangler-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["wrangler", "dev", "--var", "STAGE_DELAY_MS:200", "--port", "8791"],
+      "port": 8791
+    }
+  ]
+}

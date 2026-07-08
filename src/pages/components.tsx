@@ -56,6 +56,39 @@ ol#stagelog li[data-state="failed"] { color: var(--error); }
 .finding-list { margin: 8px 0 0; padding-left: 20px; color: var(--text-secondary); }
 .finding-list li { margin: 4px 0; }
 .clean { color: var(--success); font-family: "JetBrains Mono", ui-monospace, monospace; }
+.subhead { color: var(--text-secondary); }
+input[type="text"], input[type="password"] {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  height: 48px;
+  width: 100%;
+  font-size: 15px;
+  font-family: inherit;
+}
+input[type="text"]:focus, input[type="password"]:focus {
+  outline: 3px solid rgba(34, 211, 238, 0.25);
+  border-color: var(--border-strong);
+}
+button[type="submit"] {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+button[type="submit"]:hover { background: #67E3F5; }
+button[type="submit"]:disabled { opacity: 0.4; cursor: default; }
+.toggle-row { color: var(--text-secondary); font-size: 13px; }
+.hint { color: var(--text-muted); font-size: 13px; margin: 4px 0 0; }
+#formerror { color: var(--error); font-size: 13px; margin-top: 8px; }
+form > * + * { margin-top: 12px; }
 `);
 
 function ContextTaxCard({ defTokens, estimated, toolCount }: { defTokens: number; estimated: boolean; toolCount: number }) {

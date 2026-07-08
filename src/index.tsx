@@ -7,6 +7,7 @@ import { audit } from "./routes/audit";
 import { reportApi, buildReportResponse, isUnlocked } from "./routes/report-api";
 import { getReport } from "./lib/db";
 import { ReportPage } from "./pages/Report";
+import { HomePage } from "./pages/Home";
 
 export type Bindings = {
   DB: D1Database;
@@ -20,22 +21,7 @@ export type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-app.get("/", (c) =>
-  c.html(
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <title>MCP Audit</title>
-      </head>
-      <body>
-        <main>
-          <h1>MCP Audit</h1>
-          <p>Which of your tools does Claude actually use?</p>
-        </main>
-      </body>
-    </html>,
-  ),
-);
+app.get("/", (c) => c.html(HomePage()));
 
 // Dev-only helper to kick the pipeline directly. Active only when STAGE_DELAY_MS
 // is set (local dev). ponytail: throwaway harness, not wired in prod.
