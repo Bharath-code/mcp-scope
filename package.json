@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
     "@cfworker/json-schema": "^4.1.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@sentry/cloudflare": "^9.0.0",

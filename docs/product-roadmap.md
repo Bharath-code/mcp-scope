@@ -97,7 +97,7 @@
   Files: `src/routes/audit.ts`, `src/pipeline/audit-pipeline.ts`, `src/lib/db.ts`
   Notes: Per FR-003 + Open Question Q1(b): after tools/list, look up an existing complete report with the same `tools_hash`; if found, mark this run complete as an alias (copy headline refs or 302 the report page to the canonical id — implementer's choice, keep one canonical id per tools_hash) and refund the rate-limit charge. Verify: second submission of an unchanged server returns instantly with zero pipeline stages beyond listing.
 
-- [ ] **TASK-014** — Token counting for context tax
+- [x] **TASK-014** — Token counting for context tax
   Files: `src/lib/tokens.ts`, `src/pipeline/static-checks.ts`, `package.json`
   Notes: `npm i @anthropic-ai/sdk`. `client.messages.countTokens({ model: haiku, tools, messages: [minimal] })` minus baseline for empty-tools call = def_tokens. Cache on the report row. Fallback if the API errors: estimate serializedJson.length/4 and flag as estimate. Verify: known fixture toolset returns a plausible stable count.
 
