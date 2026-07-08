@@ -101,7 +101,7 @@
   Files: `src/lib/tokens.ts`, `src/pipeline/static-checks.ts`, `package.json`
   Notes: `npm i @anthropic-ai/sdk`. `client.messages.countTokens({ model: haiku, tools, messages: [minimal] })` minus baseline for empty-tools call = def_tokens. Cache on the report row. Fallback if the API errors: estimate serializedJson.length/4 and flag as estimate. Verify: known fixture toolset returns a plausible stable count.
 
-- [ ] **TASK-015** — Static checks: schema validity, description flags, name similarity
+- [x] **TASK-015** — Static checks: schema validity, description flags, name similarity
   Files: `src/pipeline/static-checks.ts`, `src/lib/similarity.ts`, `src/lib/similarity.test.ts`
   Notes: Per FR-005. Schema: each tool's inputSchema parses as JSON Schema (structural check, no ajv dependency needed — validate type/properties shape). Descriptions: empty or single-line < 40 chars flagged. Names: Dice coefficient ≥ 0.8 on normalized names (lowercase, split camelCase/underscores) → collision-warning pairs. Write `static_json` to the report as one batch immediately — this must land before the eval stages. Unit-test similarity with pairs like search_docs/query_docs. Verify: vitest green; fixture server shows findings < 2s after listing on the report page.
 
