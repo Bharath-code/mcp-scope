@@ -105,7 +105,7 @@
   Files: `src/pipeline/static-checks.ts`, `src/lib/similarity.ts`, `src/lib/similarity.test.ts`
   Notes: Per FR-005. Schema: each tool's inputSchema parses as JSON Schema (structural check, no ajv dependency needed — validate type/properties shape). Descriptions: empty or single-line < 40 chars flagged. Names: Dice coefficient ≥ 0.8 on normalized names (lowercase, split camelCase/underscores) → collision-warning pairs. Write `static_json` to the report as one batch immediately — this must land before the eval stages. Unit-test similarity with pairs like search_docs/query_docs. Verify: vitest green; fixture server shows findings < 2s after listing on the report page.
 
-- [ ] **TASK-016** — Render static findings on the report page
+- [x] **TASK-016** — Render static findings on the report page
   Files: `src/pages/Report.tsx`, `src/pages/components.tsx`
   Notes: Stage log line "static checks ✓" plus finding cards: context tax ("Your N tool definitions consume X tokens of every conversation before the user says a word"), schema issues (named), weak descriptions (named), name-collision warnings (named pairs). Copy follows Vision § Voice & Tone DO column exactly — numbers-first, no hedging. Style with docs/design.md tokens if present. Verify: real server renders all applicable finding types; a clean server renders "static checks ✓ — no issues".
 

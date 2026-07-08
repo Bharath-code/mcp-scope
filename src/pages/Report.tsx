@@ -1,5 +1,6 @@
 import { html, raw } from "hono/html";
 import type { ReportApiResponse, ReportStatus } from "../types";
+import { PAGE_STYLES, StaticFindings } from "./components";
 
 // Ordered pipeline stages for the log. `queued` maps to "connecting" pending.
 const STAGES: { key: ReportStatus; label: string }[] = [
@@ -94,6 +95,7 @@ export function ReportPage({ resp, hash }: { resp: ReportApiResponse; hash: stri
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>${resp.serverName ? `${resp.serverName} — MCP Audit` : "MCP Audit"}</title>
+        <style>${PAGE_STYLES}</style>
       </head>
       <body>
         <main>
@@ -101,6 +103,7 @@ export function ReportPage({ resp, hash }: { resp: ReportApiResponse; hash: stri
           <section aria-live="polite" aria-busy="${terminal ? "false" : "true"}">
             ${(<StageLog resp={resp} />)}
           </section>
+          ${resp.static && (<StaticFindings results={resp.static} toolCount={resp.toolCount ?? 0} />)}
         </main>
         ${terminal ? "" : (<script>{renderScript(hash)}</script>)}
       </body>
