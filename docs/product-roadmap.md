@@ -67,7 +67,7 @@
   Files: `src/index.tsx`, `src/lib/sentry.ts`, `wrangler.toml`
   Notes: `@sentry/cloudflare` wrapping the Worker and DO. `beforeSend`: strip Authorization headers, anything matching bearer-token shape, and email addresses from events/breadcrumbs. Set `wrangler secret put SENTRY_DSN` (document all secrets from PRD § Stack Integration Guide in a `.dev.vars.example`). Verify: throw a test error behind a dev-only route; confirm it lands in Sentry without headers.
 
-- [ ] **TASK-010** — Deploy to production on the custom domain
+- [ ] **TASK-010** — Deploy to production on the custom domain ⚠️ **PARTIALLY DONE — live at https://mcp-audit.kumarbharath63.workers.dev (remote D1 created + schema applied); custom domain (mcpaudit.dev) still needs registration + founder DNS/zone setup before the `[[routes]]` block in wrangler.toml can be uncommented.**
   Files: `wrangler.toml`, `README.md`
   Notes: `wrangler deploy`; attach domain (register mcpaudit.dev + .com per Open Question Q5; .com redirects). Apply schema to remote D1. README: setup, secrets list, deploy command. Verify: production URL serves the landing placeholder; a live audit run walks the stub pipeline.
 

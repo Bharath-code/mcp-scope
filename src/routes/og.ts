@@ -6,8 +6,11 @@ import { ogHtml } from "./og-html";
 
 export const og = new Hono<{ Bindings: Bindings }>();
 
-og.get("/og/:hash{[0-9a-f]+}.png", async (c) => {
-  const hash = c.req.param("hash");
+og.get("/og/:file", async (c) => {
+  const file = c.req.param("file");
+  const match = /^([0-9a-f]+)\.png$/.exec(file);
+  if (!match) return c.notFound();
+  const hash = match[1];
   const report = await getReport(c.env.DB, hash);
   const html = ogHtml(report);
   return new ImageResponse(html, {
