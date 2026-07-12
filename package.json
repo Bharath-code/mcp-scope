@@ -13,8 +13,11 @@
     "@anthropic-ai/sdk": "^0.110.0",
     "@cfworker/json-schema": "^4.1.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "@polar-sh/sdk": "^0.48.1",
     "@sentry/cloudflare": "^9.0.0",
-    "hono": "^4.6.14"
+    "hono": "^4.6.14",
+    "resend": "^6.17.1",
+    "workers-og": "^0.0.27"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250109.0",

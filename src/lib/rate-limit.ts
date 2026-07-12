@@ -43,3 +43,11 @@ export async function bumpCapture(db: D1Database, ip: string): Promise<number> {
     .first<{ captures: number }>();
   return row?.captures ?? 1;
 }
+
+// Refund a capture charge that was rejected for exceeding the daily limit.
+export async function refundCapture(db: D1Database, ip: string, day: string): Promise<void> {
+  await db
+    .prepare("UPDATE rate_limits SET captures = MAX(0, captures - 1) WHERE ip = ? AND day = ?")
+    .bind(ip, day)
+    .run();
+}

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS reports (
   headline_json TEXT,                 -- JSON: {effectiveTools, totalTools, defTokens, deadTools, collisions, falsePositives}
   static_json TEXT,                   -- JSON: static check results
   eval_cost_usd REAL,                 -- logged actual LLM spend for this report
+  raw_json TEXT,                       -- tools/list payload, only kept for the 0-tools disclosure (TASK-018)
   is_published INTEGER NOT NULL DEFAULT 0,
   slug TEXT UNIQUE,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),

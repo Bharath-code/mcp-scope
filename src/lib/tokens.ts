@@ -42,7 +42,7 @@ function anthropicCount(apiKey: string): CountFn {
   };
 }
 
-function toAnthropicTools(tools: McpTool[]): Anthropic.Tool[] {
+export function toAnthropicTools(tools: McpTool[]): Anthropic.Tool[] {
   return tools.map((t) => ({
     name: t.name,
     description: t.description ?? "",

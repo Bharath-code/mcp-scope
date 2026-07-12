@@ -51,6 +51,7 @@ const PATCHABLE = new Set([
   "headline_json",
   "static_json",
   "eval_cost_usd",
+  "raw_json",
   "is_published",
   "slug",
   "completed_at",
@@ -144,6 +145,64 @@ export async function insertEvalCalls(
       ),
     ),
   );
+}
+
+// Idempotent on (email, report_id) — resubmitting the same email is a no-op.
+export async function insertEmailCapture(db: D1Database, email: string, reportId: string): Promise<void> {
+  await db
+    .prepare("INSERT INTO email_captures (email, report_id) VALUES (?, ?) ON CONFLICT(email, report_id) DO NOTHING")
+    .bind(email, reportId)
+    .run();
+}
+
+// Idempotent on polar_order_id — a replayed webhook is a no-op.
+export async function insertTuneUpOrder(
+  db: D1Database,
+  order: { polarOrderId: string; reportId: string | null; email: string; amountCents: number },
+): Promise<void> {
+  await db
+    .prepare(
+      `INSERT INTO tune_up_orders (polar_order_id, report_id, email, amount_cents)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(polar_order_id) DO NOTHING`,
+    )
+    .bind(order.polarOrderId, order.reportId, order.email, order.amountCents)
+    .run();
+}
+
+export type PublishedReportRow = {
+  slug: string;
+  server_name: string | null;
+  tool_count: number | null;
+  headline_json: string | null;
+};
+
+// Landing-page grid (TASK-037). Most recently published first.
+export async function getPublishedReports(db: D1Database, limit = 20): Promise<PublishedReportRow[]> {
+  const { results } = await db
+    .prepare(
+      "SELECT slug, server_name, tool_count, headline_json FROM reports WHERE is_published = 1 ORDER BY created_at DESC LIMIT ?",
+    )
+    .bind(limit)
+    .all<PublishedReportRow>();
+  return results;
+}
+
+export type EvalCallRow = {
+  id: number;
+  report_id: string;
+  target_tool: string | null;
+  query: string;
+  selected_tool: string | null;
+  leaked: number;
+};
+
+export async function getEvalCallRows(db: D1Database, reportId: string): Promise<EvalCallRow[]> {
+  const { results } = await db
+    .prepare("SELECT * FROM eval_calls WHERE report_id = ? ORDER BY id ASC")
+    .bind(reportId)
+    .all<EvalCallRow>();
+  return results;
 }
 
 export type ToolResultRow = {

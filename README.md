@@ -78,3 +78,16 @@ rate-limit charge. `/r/{id}` server-renders the current state; a tiny inline scr
 polls `/api/report/{id}` every 1.5s and reloads on completion.
 
 **Never executes tools.** The MCP client calls `initialize` + `tools/list` only.
+
+## Ops
+
+Founder's morning check — saved queries in `scripts/ops.sql` (fresh runs/day, eval
+cost/day, captures/day, tune-up orders, top IPs by volume):
+
+```bash
+npx wrangler d1 execute mcp-audit --remote --file scripts/ops.sql
+```
+
+Other operational scripts: `scripts/verify-report.ts` (hand-verify a report's eval
+calls before publishing), `scripts/publish-famous.ts` (run + verify + publish a
+candidate server), `scripts/kill-gate.ts` (day-14 launch readout).

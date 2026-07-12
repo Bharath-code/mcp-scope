@@ -1,19 +1,32 @@
 import { Hono } from "hono";
 import * as Sentry from "@sentry/cloudflare";
-import { insertReport } from "./lib/db";
+import { insertReport, getPublishedReports } from "./lib/db";
 import { sentryOptions } from "./lib/sentry";
 import { AuditPipeline as AuditPipelineClass } from "./pipeline/audit-pipeline";
 import { audit } from "./routes/audit";
+import { og } from "./routes/og";
+import { capture } from "./routes/capture";
+import { checkout } from "./routes/checkout";
+import { webhooks } from "./routes/webhooks";
+import { published } from "./routes/published";
+import { seo } from "./routes/seo";
 import { reportApi, buildReportResponse, isUnlocked } from "./routes/report-api";
 import { getReport } from "./lib/db";
 import { ReportPage } from "./pages/Report";
 import { HomePage } from "./pages/Home";
+import { MethodPage } from "./pages/Method";
 
 export type Bindings = {
   DB: D1Database;
   AUDIT_PIPELINE: DurableObjectNamespace<AuditPipelineClass>;
   PUBLIC_POSTHOG_KEY: string;
   FOUNDER_EMAIL: string;
+  ANTHROPIC_API_KEY: string;
+  RESEND_API_KEY?: string;
+  POLAR_ACCESS_TOKEN?: string;
+  POLAR_WEBHOOK_SECRET?: string;
+  POLAR_TUNE_UP_PRODUCT_ID?: string;
+  POLAR_SERVER?: "sandbox" | "production";
   SENTRY_DSN?: string;
   STAGE_DELAY_MS?: string;
   ALARM_TIMEOUT_MS?: string;
@@ -21,7 +34,8 @@ export type Bindings = {
 
 const app = new Hono<{ Bindings: Bindings }>();
 
-app.get("/", (c) => c.html(HomePage()));
+app.get("/", async (c) => c.html(HomePage(c.env.PUBLIC_POSTHOG_KEY, await getPublishedReports(c.env.DB))));
+app.get("/method", (c) => c.html(MethodPage(c.env.PUBLIC_POSTHOG_KEY)));
 
 // Dev-only helper to kick the pipeline directly. Active only when STAGE_DELAY_MS
 // is set (local dev). ponytail: throwaway harness, not wired in prod.
@@ -40,6 +54,12 @@ app.post("/dev/kick", async (c) => {
 });
 
 app.route("/", audit);
+app.route("/", og);
+app.route("/", capture);
+app.route("/", checkout);
+app.route("/", webhooks);
+app.route("/", published);
+app.route("/", seo);
 app.route("/", reportApi);
 
 // Dev-only: throw to confirm Sentry receives scrubbed events. ponytail: gated on STAGE_DELAY_MS.
@@ -72,7 +92,7 @@ app.get("/r/:hash", async (c) => {
   }
   const unlocked = isUnlocked(c.req.header("cookie"), id);
   const resp = await buildReportResponse(c.env.DB, report, unlocked);
-  return c.html(ReportPage({ resp, hash: id }));
+  return c.html(ReportPage({ resp, hash: id, posthogKey: c.env.PUBLIC_POSTHOG_KEY }));
 });
 
 // Wrap the DO and Worker with Sentry; beforeSend/beforeBreadcrumb scrub tokens + emails.

@@ -1,17 +1,24 @@
 import { DurableObject } from "cloudflare:workers";
-import { getCanonicalByToolsHash, getReport, patchReport, updateReportStatus } from "../lib/db";
+import {
+  getCanonicalByToolsHash,
+  getReport,
+  insertEvalCalls,
+  insertToolResults,
+  patchReport,
+  updateReportStatus,
+} from "../lib/db";
 import { refundFreshRun } from "../lib/rate-limit";
 import { sha256Hex } from "../lib/hash";
 import { ingest, classifyIngestError } from "./ingest";
+import { runStaticChecks } from "./static-checks";
+import { generateQueries } from "./query-gen";
+import { anthropicSelectionCall, runSelectionEval } from "./selection-eval";
+import { scoreReport, type EvalCall } from "./scoring";
+import { capToolsForEval } from "./eval-cap";
 import { TERMINAL_STATUSES, type ReportStatus } from "../types";
 import type { Bindings } from "../index";
 
-// ponytail: static/generating/evaluating still stubbed — real stages land in
-// Phase 1/2 (TASK-015+). connecting/listing are now the real ingest (TASK-012).
-const STUB_STAGES: ReportStatus[] = ["static", "generating", "evaluating"];
-
 const DEFAULT_ALARM_MS = 5 * 60 * 1000; // FR-017 watchdog: 5 minutes
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 export type PipelineInput = {
   reportId: string;
@@ -80,13 +87,64 @@ export class AuditPipeline extends DurableObject<Bindings> {
         return;
       }
 
-      const stageDelay = Number(this.env.STAGE_DELAY_MS ?? "1000");
-      for (const stage of STUB_STAGES) {
-        // Watchdog wins: if the run was already marked terminal, stop advancing.
-        if (!(await this.advance(reportId, stage))) return;
-        await sleep(stageDelay);
+      // TASK-018: nothing to evaluate. Complete now with the raw tools/list
+      // payload on display instead of walking static/generating/evaluating.
+      if (result.tools.length === 0) {
+        await patchReport(db, reportId, {
+          raw_json: result.rawJson,
+          status: "complete",
+          completed_at: new Date().toISOString(),
+        });
+        if (meta.clientIp && meta.chargeDay) {
+          await refundFreshRun(db, meta.clientIp, meta.chargeDay);
+        }
+        await this.ctx.storage.deleteAlarm();
+        return;
       }
+
+      const apiKey = this.env.ANTHROPIC_API_KEY;
+
+      if (!(await this.advance(reportId, "static"))) return;
+      const staticResults = await runStaticChecks(apiKey, result.tools);
       await patchReport(db, reportId, {
+        static_json: JSON.stringify(staticResults),
+        def_tokens: staticResults.defTokens,
+      });
+
+      const { evalTools, capped } = capToolsForEval(result.tools);
+
+      if (!(await this.advance(reportId, "generating"))) return;
+      const queries = await generateQueries(apiKey, evalTools);
+      await patchReport(db, reportId, { eval_total: queries.length });
+
+      if (!(await this.advance(reportId, "evaluating"))) return;
+      const { calls, costUsd } = await runSelectionEval(
+        evalTools,
+        queries,
+        anthropicSelectionCall(apiKey),
+        (done, total) => {
+          // ponytail: throttle progress writes — every 3rd completion (and the
+          // last) is plenty for a poller updating every 1.5s.
+          if (done % 3 === 0 || done === total) {
+            this.ctx.waitUntil(patchReport(db, reportId, { eval_done: done }));
+          }
+        },
+      );
+
+      const evalCalls: EvalCall[] = calls.map((c) => ({
+        targetTool: c.targetTool,
+        selectedTool: c.selectedTool,
+        leaked: c.leaked,
+      }));
+      const { tools: toolResults, headline } = scoreReport(evalTools, evalCalls, staticResults.defTokens);
+      if (capped) headline.evaluatedCount = evalTools.length;
+
+      await insertToolResults(db, reportId, toolResults);
+      await insertEvalCalls(db, reportId, calls);
+      await patchReport(db, reportId, {
+        headline_json: JSON.stringify(headline),
+        effective_tools: headline.effectiveTools,
+        eval_cost_usd: costUsd,
         status: "complete",
         completed_at: new Date().toISOString(),
       });

@@ -5,6 +5,6 @@ import { defineConfig } from "vitest/config";
 // only if a test needs real D1/DO bindings.
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
   },
 });

@@ -1,8 +1,11 @@
 import { Hono } from "hono";
 import { getCookie } from "hono/cookie";
 import type { Bindings } from "../index";
-import { getReport, getToolResults } from "../lib/db";
-import type { ReportApiResponse, ReportRow, StaticResults, ToolResult } from "../types";
+import { getEvalCallRows, getReport, getToolResults } from "../lib/db";
+import { groupTranscripts } from "../lib/transcripts";
+import type { Headline, ReportApiResponse, ReportRow, StaticResults, ToolResult } from "../types";
+
+const ERR_LOCKED = "Enter your email on the report page to unlock transcripts.";
 
 export const reportApi = new Hono<{ Bindings: Bindings }>();
 
@@ -20,19 +23,7 @@ export async function buildReportResponse(
     ? (JSON.parse(report.static_json) as StaticResults)
     : null;
 
-  let headline: ReportApiResponse["headline"] = null;
-  if (report.headline_json) {
-    const h = JSON.parse(report.headline_json) as {
-      effectiveTools: number;
-      totalTools: number;
-      defTokens: number;
-    };
-    headline = {
-      effectiveTools: h.effectiveTools,
-      totalTools: h.totalTools,
-      defTokens: h.defTokens,
-    };
-  }
+  const headline: Headline | null = report.headline_json ? (JSON.parse(report.headline_json) as Headline) : null;
 
   let tools: ToolResult[] | null = null;
   if (report.status === "complete") {
@@ -59,6 +50,8 @@ export async function buildReportResponse(
     headline,
     tools,
     transcriptsUnlocked: unlocked,
+    transcripts: unlocked && report.status === "complete" ? groupTranscripts(await getEvalCallRows(db, report.id)) : null,
+    rawToolsJson: report.status === "complete" && report.tool_count === 0 ? report.raw_json : null,
   };
 }
 
@@ -73,4 +66,16 @@ reportApi.get("/api/report/:hash", async (c) => {
   }
   const unlocked = isUnlocked(c.req.header("cookie"), id);
   return c.json(await buildReportResponse(c.env.DB, report, unlocked));
+});
+
+reportApi.get("/api/transcripts/:hash", async (c) => {
+  const id = c.req.param("hash");
+  let report = await getReport(c.env.DB, id);
+  if (!report) return c.json({ error: "Report not found" }, 404);
+  if (report.canonical_id) {
+    const canonical = await getReport(c.env.DB, report.canonical_id);
+    if (canonical) report = canonical;
+  }
+  if (!isUnlocked(c.req.header("cookie"), id)) return c.json({ error: ERR_LOCKED }, 403);
+  return c.json({ transcripts: groupTranscripts(await getEvalCallRows(c.env.DB, report.id)) });
 });

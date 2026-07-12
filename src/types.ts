@@ -58,9 +58,11 @@ export type ReportApiResponse = {
   serverName: string | null;
   toolCount: number | null;
   static: StaticResults | null;
-  headline: { effectiveTools: number; totalTools: number; defTokens: number } | null;
+  headline: Headline | null;
   tools: ToolResult[] | null;
   transcriptsUnlocked: boolean;
+  transcripts: TranscriptGroup[] | null; // populated only when unlocked (TASK-030)
+  rawToolsJson: string | null; // set only when toolCount === 0 (TASK-018 disclosure)
 };
 
 // Row shape as stored in D1 `reports`.
@@ -80,11 +82,15 @@ export type ReportRow = {
   headline_json: string | null;
   static_json: string | null;
   eval_cost_usd: number | null;
+  raw_json: string | null;
   is_published: number;
   slug: string | null;
   created_at: string;
   completed_at: string | null;
 };
+
+export type TranscriptEntry = { query: string; selectedTool: string | null; leaked: boolean };
+export type TranscriptGroup = { tool: string; entries: TranscriptEntry[] };
 
 export type EvalCallInsert = {
   targetTool: string | null;
