@@ -4,8 +4,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { McpTool, EvalCallInsert } from "../types";
 import type { GeneratedQuery } from "./query-gen";
 import { toAnthropicTools } from "../lib/tokens";
+import { EVAL_MODEL } from "../lib/model";
 
-const HAIKU = "claude-haiku-4-5";
 const CONCURRENCY = 5;
 const MAX_TOKENS = 64;
 
@@ -24,7 +24,7 @@ export function anthropicSelectionCall(apiKey: string): CallFn {
   const client = new Anthropic({ apiKey });
   return async (query, tools) => {
     const res = await client.messages.create({
-      model: HAIKU,
+      model: EVAL_MODEL,
       max_tokens: MAX_TOKENS,
       temperature: 0,
       tool_choice: { type: "auto" },

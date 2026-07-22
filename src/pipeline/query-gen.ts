@@ -4,8 +4,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { McpTool } from "../types";
 import { isLeaked } from "./anti-leakage";
+import { EVAL_MODEL } from "../lib/model";
 
-const HAIKU = "claude-haiku-4-5";
 const QUERIES_PER_TOOL = 3;
 const DISTRACTOR_COUNT = 5;
 const EMIT_TOOL = "emit_queries";
@@ -60,7 +60,7 @@ function anthropicCall(apiKey: string): CallFn {
   const client = new Anthropic({ apiKey });
   return async (system, user, toolNames) => {
     const res = await client.messages.create({
-      model: HAIKU,
+      model: EVAL_MODEL,
       max_tokens: 4096,
       system,
       tools: [emitToolSchema(toolNames)],

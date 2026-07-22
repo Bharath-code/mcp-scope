@@ -1,8 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { McpTool } from "../types";
+import { EVAL_MODEL } from "./model";
 
-// Token counts are model-specific; must match the eval model (TASK-019+).
-const HAIKU = "claude-haiku-4-5";
 const PROBE = [{ role: "user" as const, content: "." }];
 
 export type DefTokens = { defTokens: number; estimated: boolean };
@@ -34,7 +33,7 @@ function anthropicCount(apiKey: string): CountFn {
   const client = new Anthropic({ apiKey });
   return async ({ tools, messages }) => {
     const res = await client.messages.countTokens({
-      model: HAIKU,
+      model: EVAL_MODEL,
       messages,
       ...(tools ? { tools: tools as Anthropic.ToolUnion[] } : {}),
     });
