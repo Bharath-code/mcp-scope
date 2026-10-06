@@ -1,7 +1,9 @@
 import { html, raw } from "hono/html";
 import type { ReportApiResponse, ReportStatus } from "../types";
 import {
+  FONT_LINKS,
   PAGE_STYLES,
+  SiteHeader,
   StaticFindings,
   EmptyToolsCard,
   HeadlineBlock,
@@ -47,23 +49,29 @@ function StageLog({ resp }: { resp: ReportApiResponse }) {
   const cur = idx(resp.status);
   const failed = resp.status === "failed";
   return (
-    <ol id="stagelog">
-      {STAGES.map((s) => {
-        const si = ORDER.indexOf(s.key);
-        let state = "pending";
-        if (resp.status === "failed") state = si < cur ? "done" : si === cur ? "failed" : "pending";
-        else if (si < cur) state = "done";
-        else if (si === cur) state = "active";
-        const mark = state === "done" ? "✓" : state === "active" ? "…" : state === "failed" ? "✗" : "·";
-        return (
-          <li data-stage={s.key} data-state={state}>
-            {mark} {s.label}
-          </li>
-        );
-      })}
-      {resp.status === "complete" && <li data-state="done">✓ complete</li>}
-      {failed && resp.error && <li data-state="failed">✗ {resp.error}</li>}
-    </ol>
+    <div class="stagelog-container">
+      <div class="stagelog-bar">
+        <span><span class="live-dot"></span>selection runner telemetry</span>
+        <span>v0.1</span>
+      </div>
+      <ol id="stagelog">
+        {STAGES.map((s) => {
+          const si = ORDER.indexOf(s.key);
+          let state = "pending";
+          if (resp.status === "failed") state = si < cur ? "done" : si === cur ? "failed" : "pending";
+          else if (si < cur) state = "done";
+          else if (si === cur) state = "active";
+          const mark = state === "done" ? "✓" : state === "active" ? "…" : state === "failed" ? "✗" : "·";
+          return (
+            <li data-stage={s.key} data-state={state}>
+              {mark} {s.label}
+            </li>
+          );
+        })}
+        {resp.status === "complete" && <li data-state="done">✓ complete</li>}
+        {failed && resp.error && <li data-state="failed">✗ {resp.error}</li>}
+      </ol>
+    </div>
   );
 }
 
@@ -146,10 +154,12 @@ export function ReportPage({
         <meta property="og:title" content="${raw(seoTitle)}" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:image" content="/og/${hash}.png" />
+        ${FONT_LINKS}
         <style>${PAGE_STYLES}</style>
         ${posthogKey ? html`<script>${raw(posthogSnippet(posthogKey))}</script>` : ""}
       </head>
       <body>
+        <SiteHeader />
         <main>
           <h1>MCP Audit${resp.serverName ? raw(` — ${escapeText(resp.serverName)}`) : ""}</h1>
           ${published && (<p class="hint">Audited on {published.auditedAt.slice(0, 10)}.</p>)}
@@ -176,8 +186,11 @@ export function ReportPage({
           ${resp.status === "complete" && (<TuneUpCta hash={hash} />)}
           ${resp.status === "complete" && (<BadgeCard idOrSlug={published?.slug ?? hash} />)}
           ${published && (<RunOnYourServerForm />)}
-          <footer class="hint">
-            Selection at temperature 0 with generated queries is a proxy, not ground truth. <a href="/method">Method →</a> · <a href="/moat">MCP 2.0 & Defensibility →</a>
+          <footer class="site-footer">
+            <p>Selection at temperature 0 with generated queries is a proxy, not ground truth.</p>
+            <div class="footer-links">
+              <a href="/method">Method →</a> · <a href="/moat">MCP 2.0 & Defensibility →</a>
+            </div>
           </footer>
         </main>
         ${posthogKey ? html`<script>${viewedScript(hash, resp.toolCount)}</script>` : ""}

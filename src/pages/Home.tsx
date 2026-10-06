@@ -1,5 +1,5 @@
 import { html, raw } from "hono/html";
-import { PAGE_STYLES, PublishedGrid } from "./components";
+import { FONT_LINKS, PAGE_STYLES, PublishedGrid, SiteHeader } from "./components";
 import { posthogSnippet } from "../lib/analytics";
 import type { PublishedReportRow } from "../lib/db";
 
@@ -58,16 +58,21 @@ export function HomePage(posthogKey?: string, published: PublishedReportRow[] = 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>MCP Audit — Which of your tools does Claude actually use?</title>
         <meta name="description" content="Behavioral audits for MCP servers: which tools Claude picks, which never trigger, and how many tokens they tax every conversation." />
+        ${FONT_LINKS}
         <style>${PAGE_STYLES}</style>
         ${posthogKey ? html`<script>${raw(posthogSnippet(posthogKey))}</script>` : ""}
       </head>
       <body>
+        <SiteHeader activeTab="audit" />
         <main>
-          <h1>Which of your tools does Claude actually use?</h1>
-          <p class="subhead">
-            Paste your MCP server's URL. We'll list its tools, measure the context tax, and run real selection
-            queries against Claude to see which tools actually get picked.
-          </p>
+          <div class="hero">
+            <div class="hero-chip"><span class="chip-dot"></span> Behavioral Tool Selection Audit for MCP</div>
+            <h1 class="hero-title">Which of your tools does Claude actually use?</h1>
+            <p class="subhead">
+              Paste your MCP server's URL. We'll list its tools, measure the context tax, and run real selection
+              queries against Claude to see which tools actually get picked.
+            </p>
+          </div>
           <form id="auditform">
             <input
               id="urlinput"
@@ -89,24 +94,28 @@ export function HomePage(posthogKey?: string, published: PublishedReportRow[] = 
           </form>
           <div class="value-props">
             <div class="card">
+              <span class="prop-tag">01 · Behavioral Eval</span>
               <h3>Real selection, not a linter</h3>
               <p>We run actual queries against Claude and record which tool it picks. No static heuristics standing in for behavior.</p>
             </div>
             <div class="card">
+              <span class="prop-tag">02 · Context Cost</span>
               <h3>Context tax in tokens</h3>
               <p>Every tool definition costs tokens on every turn. We measure exactly how many, before the user says a word.</p>
             </div>
             <div class="card">
+              <span class="prop-tag">03 · Instant Results</span>
               <h3>One paste, no setup</h3>
               <p>Paste your server's URL. No dashboard, no config file, no account required to see the first result.</p>
             </div>
           </div>
           ${(<PublishedGrid reports={published} />)}
         </main>
-        <footer class="hint" style="text-align: center; margin-top: 32px;">
-          Found a problem? $149 gets you a PR-ready diff with rewritten tool descriptions.
-          <br />
-          <a href="/method" style="color: var(--text-muted); text-decoration: none;">Methodology →</a> · <a href="/moat" style="color: var(--accent); text-decoration: none;">MCP 2.0 & Defensibility →</a>
+        <footer class="site-footer">
+          <p>Found a problem? $149 gets you a PR-ready diff with rewritten tool descriptions.</p>
+          <div class="footer-links">
+            <a href="/method">Methodology →</a> · <a href="/moat">MCP 2.0 & Defensibility →</a>
+          </div>
         </footer>
         <script>${formScript()}</script>
       </body>

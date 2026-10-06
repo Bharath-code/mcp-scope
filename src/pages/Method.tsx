@@ -1,5 +1,5 @@
 import { html, raw } from "hono/html";
-import { PAGE_STYLES } from "./components";
+import { FONT_LINKS, PAGE_STYLES, SiteHeader } from "./components";
 import { EFFECTIVE_THRESHOLD } from "../pipeline/scoring";
 import { EVAL_TOOL_CAP } from "../pipeline/eval-cap";
 import { posthogSnippet } from "../lib/analytics";
@@ -12,10 +12,12 @@ export function MethodPage(posthogKey?: string) {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Method — MCP Audit</title>
+        ${FONT_LINKS}
         <style>${PAGE_STYLES}</style>
         ${posthogKey ? html`<script>${raw(posthogSnippet(posthogKey))}</script>` : ""}
       </head>
       <body>
+        <SiteHeader activeTab="method" />
         <main>
           <h1>Method</h1>
           <p class="subhead">
@@ -24,7 +26,7 @@ export function MethodPage(posthogKey?: string) {
           </p>
 
           <h2>Pipeline stages</h2>
-          <ol>
+          <ol class="method-stages">
             <li><strong>connecting / listing</strong> — connect to your server via streamable HTTP (SSE fallback), call
               <code>initialize</code> and <code>tools/list</code>. Nothing else. <code>tools/call</code> is never
               invoked anywhere in this codebase.</li>
@@ -46,7 +48,7 @@ export function MethodPage(posthogKey?: string) {
           </p>
 
           <h2>Scoring</h2>
-          <ul>
+          <ul class="finding-list">
             <li><strong>Trigger accuracy</strong> — of a tool's own (non-leaked) queries, the share that actually
               selected that tool.</li>
             <li><strong>Effective</strong> — a tool is counted as effective when trigger accuracy is at least
@@ -62,7 +64,7 @@ export function MethodPage(posthogKey?: string) {
           </ul>
 
           <h2>Known limitations</h2>
-          <ul>
+          <ul class="finding-list">
             <li>Servers with more than ${EVAL_TOOL_CAP} tools are evaluated on the first ${EVAL_TOOL_CAP} by list order
               only. Context tax still counts every tool the server returns.</li>
             <li>Selection at temperature 0 on generated queries approximates real usage patterns; it is not a
@@ -72,8 +74,10 @@ export function MethodPage(posthogKey?: string) {
             <li>If all of a tool's queries are excluded as leaked, that tool is disclosed as not scorable and left out
               of the effective/total denominator.</li>
           </ul>
-          <footer class="hint" style="text-align: center; margin-top: 48px;">
-            <a href="/" style="color: var(--text-muted); text-decoration: none;">← Run an audit</a> · <a href="/moat" style="color: var(--accent); text-decoration: none;">MCP 2.0 & Defensibility →</a>
+          <footer class="site-footer">
+            <div class="footer-links">
+              <a href="/">← Run an audit</a> · <a href="/moat">MCP 2.0 & Defensibility →</a>
+            </div>
           </footer>
         </main>
       </body>
