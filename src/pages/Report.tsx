@@ -13,6 +13,7 @@ import {
   TuneUpCta,
   PaidBanner,
   RunOnYourServerForm,
+  BadgeCard,
 } from "./components";
 import { posthogSnippet } from "../lib/analytics";
 
@@ -173,9 +174,10 @@ export function ReportPage({
             <TranscriptUnlockCard hash={hash} unlocked={resp.transcriptsUnlocked} transcripts={resp.transcripts} />
           )}
           ${resp.status === "complete" && (<TuneUpCta hash={hash} />)}
+          ${resp.status === "complete" && (<BadgeCard idOrSlug={published?.slug ?? hash} />)}
           ${published && (<RunOnYourServerForm />)}
           <footer class="hint">
-            Selection at temperature 0 with generated queries is a proxy, not ground truth. <a href="/method">Method →</a>
+            Selection at temperature 0 with generated queries is a proxy, not ground truth. <a href="/method">Method →</a> · <a href="/moat">MCP 2.0 & Defensibility →</a>
           </footer>
         </main>
         ${posthogKey ? html`<script>${viewedScript(hash, resp.toolCount)}</script>` : ""}

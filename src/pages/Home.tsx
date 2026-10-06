@@ -103,8 +103,10 @@ export function HomePage(posthogKey?: string, published: PublishedReportRow[] = 
           </div>
           ${(<PublishedGrid reports={published} />)}
         </main>
-        <footer class="hint">
+        <footer class="hint" style="text-align: center; margin-top: 32px;">
           Found a problem? $149 gets you a PR-ready diff with rewritten tool descriptions.
+          <br />
+          <a href="/method" style="color: var(--text-muted); text-decoration: none;">Methodology →</a> · <a href="/moat" style="color: var(--accent); text-decoration: none;">MCP 2.0 & Defensibility →</a>
         </footer>
         <script>${formScript()}</script>
       </body>

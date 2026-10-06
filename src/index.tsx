@@ -15,6 +15,8 @@ import { getReport } from "./lib/db";
 import { ReportPage } from "./pages/Report";
 import { HomePage } from "./pages/Home";
 import { MethodPage } from "./pages/Method";
+import { MoatPage } from "./pages/Moat";
+import { badge } from "./routes/badge";
 
 export type Bindings = {
   DB: D1Database;
@@ -36,6 +38,7 @@ const app = new Hono<{ Bindings: Bindings }>();
 
 app.get("/", async (c) => c.html(HomePage(c.env.PUBLIC_POSTHOG_KEY, await getPublishedReports(c.env.DB))));
 app.get("/method", (c) => c.html(MethodPage(c.env.PUBLIC_POSTHOG_KEY)));
+app.get("/moat", (c) => c.html(MoatPage));
 
 // Dev-only helper to kick the pipeline directly. Active only when STAGE_DELAY_MS
 // is set (local dev). ponytail: throwaway harness, not wired in prod.
@@ -55,6 +58,7 @@ app.post("/dev/kick", async (c) => {
 
 app.route("/", audit);
 app.route("/", og);
+app.route("/", badge);
 app.route("/", capture);
 app.route("/", checkout);
 app.route("/", webhooks);

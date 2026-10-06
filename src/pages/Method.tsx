@@ -72,6 +72,9 @@ export function MethodPage(posthogKey?: string) {
             <li>If all of a tool's queries are excluded as leaked, that tool is disclosed as not scorable and left out
               of the effective/total denominator.</li>
           </ul>
+          <footer class="hint" style="text-align: center; margin-top: 48px;">
+            <a href="/" style="color: var(--text-muted); text-decoration: none;">← Run an audit</a> · <a href="/moat" style="color: var(--accent); text-decoration: none;">MCP 2.0 & Defensibility →</a>
+          </footer>
         </main>
       </body>
     </html>`;

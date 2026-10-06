@@ -132,6 +132,7 @@ form > * + * { margin-top: 12px; }
 `);
 
 function ContextTaxCard({ defTokens, estimated, toolCount }: { defTokens: number; estimated: boolean; toolCount: number }) {
+  const tenTurnTokens = defTokens * 10;
   return (
     <div class="card warning">
       <h3>Context tax</h3>
@@ -140,6 +141,11 @@ function ContextTaxCard({ defTokens, estimated, toolCount }: { defTokens: number
         <span class="mono">{defTokens}</span> tokens of every conversation before the user says a word
         {estimated ? " (estimated)" : ""}.
       </p>
+      {defTokens > 0 && (
+        <p class="hint" style="margin-top: 8px;">
+          Across a 10-turn conversation, that is <span class="mono">{tenTurnTokens.toLocaleString()} tokens</span> consumed by tool schemas alone.
+        </p>
+      )}
     </div>
   );
 }
@@ -581,5 +587,21 @@ export function StaticFindings({ results, toolCount }: { results: StaticResults;
       <NameCollisionsCard pairs={results.nameCollisions} />
       {clean && <p class="clean">static checks ✓ — no issues</p>}
     </section>
+  );
+}
+
+export function BadgeCard({ idOrSlug }: { idOrSlug: string }) {
+  const badgeUrl = `/badge/${idOrSlug}.svg`;
+  const reportUrl = `/report/${idOrSlug}`;
+  const markdown = `[![MCP Audit](${badgeUrl})](${reportUrl})`;
+  return (
+    <div class="card">
+      <h3>README Badge</h3>
+      <p>Display your verified score badge in your GitHub repository README:</p>
+      <div style="margin: 12px 0;">
+        <img src={badgeUrl} alt="MCP Audit Badge" />
+      </div>
+      <pre class="mono" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 12px; margin: 0; user-select: all;">{markdown}</pre>
+    </div>
   );
 }
