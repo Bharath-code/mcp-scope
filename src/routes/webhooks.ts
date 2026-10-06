@@ -1,4 +1,4 @@
-import { Hono } from "hono";
+import { Hono, type Handler } from "hono";
 import { validateEvent, WebhookVerificationError } from "@polar-sh/sdk/webhooks";
 import * as Sentry from "@sentry/cloudflare";
 import type { Bindings } from "../index";
@@ -8,7 +8,7 @@ import { captureServerEvent } from "../lib/analytics";
 
 export const webhooks = new Hono<{ Bindings: Bindings }>();
 
-webhooks.post("/api/webhooks/polar", async (c) => {
+const handlePolarWebhook: Handler<{ Bindings: Bindings }> = async (c) => {
   const body = await c.req.text();
   const headers = Object.fromEntries(c.req.raw.headers.entries());
 
@@ -54,4 +54,7 @@ webhooks.post("/api/webhooks/polar", async (c) => {
   // downstream feature depends on them yet.
   console.log(`polar webhook: ${event.type}`);
   return c.json({ ok: true });
-});
+};
+
+webhooks.post("/api/webhooks/polar", handlePolarWebhook);
+webhooks.post("/webhooks/polar", handlePolarWebhook);

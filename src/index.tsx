@@ -70,7 +70,7 @@ app.get("/dev/boom", (c) => {
 
 app.get("/r/:hash", async (c) => {
   const id = c.req.param("hash");
-  const report = await getReport(c.env.DB, id);
+  let report = await getReport(c.env.DB, id);
   if (!report) {
     return c.html(
       <html lang="en">
@@ -90,7 +90,11 @@ app.get("/r/:hash", async (c) => {
       404,
     );
   }
-  const unlocked = isUnlocked(c.req.header("cookie"), id);
+  if (report.canonical_id) {
+    const canonical = await getReport(c.env.DB, report.canonical_id);
+    if (canonical) report = canonical;
+  }
+  const unlocked = isUnlocked(c.req.header("cookie"), id) || (report.id !== id && isUnlocked(c.req.header("cookie"), report.id));
   const resp = await buildReportResponse(c.env.DB, report, unlocked);
   return c.html(ReportPage({ resp, hash: id, posthogKey: c.env.PUBLIC_POSTHOG_KEY }));
 });

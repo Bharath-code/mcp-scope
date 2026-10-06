@@ -64,7 +64,7 @@ reportApi.get("/api/report/:hash", async (c) => {
     const canonical = await getReport(c.env.DB, report.canonical_id);
     if (canonical) report = canonical;
   }
-  const unlocked = isUnlocked(c.req.header("cookie"), id);
+  const unlocked = isUnlocked(c.req.header("cookie"), id) || (report.id !== id && isUnlocked(c.req.header("cookie"), report.id));
   return c.json(await buildReportResponse(c.env.DB, report, unlocked));
 });
 
@@ -76,6 +76,7 @@ reportApi.get("/api/transcripts/:hash", async (c) => {
     const canonical = await getReport(c.env.DB, report.canonical_id);
     if (canonical) report = canonical;
   }
-  if (!isUnlocked(c.req.header("cookie"), id)) return c.json({ error: ERR_LOCKED }, 403);
+  const unlocked = isUnlocked(c.req.header("cookie"), id) || (report.id !== id && isUnlocked(c.req.header("cookie"), report.id));
+  if (!unlocked) return c.json({ error: ERR_LOCKED }, 403);
   return c.json({ transcripts: groupTranscripts(await getEvalCallRows(c.env.DB, report.id)) });
 });
