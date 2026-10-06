@@ -51,8 +51,8 @@ function StageLog({ resp }: { resp: ReportApiResponse }) {
   return (
     <div class="stagelog-container">
       <div class="stagelog-bar">
-        <span><span class="live-dot"></span>selection runner telemetry</span>
-        <span>v0.1</span>
+        <span>Pipeline Status</span>
+        <span>Audit Run</span>
       </div>
       <ol id="stagelog">
         {STAGES.map((s) => {

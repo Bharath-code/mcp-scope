@@ -76,7 +76,7 @@ export function MethodPage(posthogKey?: string) {
           </ul>
           <footer class="site-footer">
             <div class="footer-links">
-              <a href="/">← Run an audit</a> · <a href="/moat">MCP 2.0 & Defensibility →</a>
+              <a href="/">Run an audit</a> · <a href="/moat">MCP 2.0 & Defensibility</a>
             </div>
           </footer>
         </main>

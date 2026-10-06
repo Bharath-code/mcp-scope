@@ -66,8 +66,8 @@ export function HomePage(posthogKey?: string, published: PublishedReportRow[] = 
         <SiteHeader activeTab="audit" />
         <main>
           <div class="hero">
-            <div class="hero-chip"><span class="chip-dot"></span> Behavioral Tool Selection Audit for MCP</div>
-            <h1 class="hero-title">Which of your tools does Claude actually use?</h1>
+            <div class="hero-chip">Model Context Protocol Audit</div>
+            <h1>Which of your tools does Claude actually use?</h1>
             <p class="subhead">
               Paste your MCP server's URL. We'll list its tools, measure the context tax, and run real selection
               queries against Claude to see which tools actually get picked.
@@ -94,17 +94,14 @@ export function HomePage(posthogKey?: string, published: PublishedReportRow[] = 
           </form>
           <div class="value-props">
             <div class="card">
-              <span class="prop-tag">01 · Behavioral Eval</span>
               <h3>Real selection, not a linter</h3>
               <p>We run actual queries against Claude and record which tool it picks. No static heuristics standing in for behavior.</p>
             </div>
             <div class="card">
-              <span class="prop-tag">02 · Context Cost</span>
               <h3>Context tax in tokens</h3>
               <p>Every tool definition costs tokens on every turn. We measure exactly how many, before the user says a word.</p>
             </div>
             <div class="card">
-              <span class="prop-tag">03 · Instant Results</span>
               <h3>One paste, no setup</h3>
               <p>Paste your server's URL. No dashboard, no config file, no account required to see the first result.</p>
             </div>
@@ -114,7 +111,7 @@ export function HomePage(posthogKey?: string, published: PublishedReportRow[] = 
         <footer class="site-footer">
           <p>Found a problem? $149 gets you a PR-ready diff with rewritten tool descriptions.</p>
           <div class="footer-links">
-            <a href="/method">Methodology →</a> · <a href="/moat">MCP 2.0 & Defensibility →</a>
+            <a href="/method">Methodology</a> · <a href="/moat">MCP 2.0 & Defensibility</a>
           </div>
         </footer>
         <script>${formScript()}</script>
